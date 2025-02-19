@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Scanner Display</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+            background-color: #f5f5f5;
+        }
+        h1 {
+            font-size: 2em;
+            color: #333;
+        }
+        .container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: white;
+            border: 4px solid black;
+        }
+        .scan-info {
+            margin-top: 30px;
+            font-size: 1.2em;
+            color: #444;
+        }
+        .scan-code {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Scan Progress</h1>
+    <div class="container">
+        <div class="circle" id="circle1"></div>
+        <div class="circle" id="circle2"></div>
+        <div class="circle" id="circle3"></div>
+        <div class="circle" id="circle4"></div>
+        <div class="circle" id="circle5"></div>
+    </div>
+
+    <div class="scan-info">
+        <p><strong>Last Scanned Code:</strong> <span class="scan-code" id="last-code">Waiting...</span></p>
+        <p><strong>Scanner Used:</strong> <span id="scanner-user">Unknown</span></p>
+    </div>
+
+    <script>
+        var socket = io.connect("http://" + document.domain + ":" + location.port);
+        let scanCount = 0;
+
+        socket.on("update_scan", function(data) {
+            console.log("Scan received:", data.scanned_id, "by", data.scanner_user);
+
+            // Update the last scanned code
+            document.getElementById("last-code").innerText = data.scanned_id;
+            document.getElementById("scanner-user").innerText = data.scanner_user;
+
+            // Increment scan count
+            scanCount++;
+
+            // Update the circles
+            for (let i = 0; i < 5; i++) {
+                let circle = document.getElementById("circle" + (i + 1));
+                if (i < scanCount) {
+                    circle.style.backgroundColor = "green";
+                } else {
+                    circle.style.backgroundColor = "white";
+                }
+            }
+
+            // Reset after 5 scans
+            if (scanCount >= 5) {
+                setTimeout(() => {
+                    scanCount = 0;
+                    for (let i = 1; i <= 5; i++) {
+                        document.getElementById("circle" + i).style.backgroundColor = "white";
+                    }
+                }, 500); // Reset after 0.5s
+            }
+        });
+    </script>
+</body>
+</html>
